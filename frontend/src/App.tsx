@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PenTool, Target, TrendingUp, Rocket } from 'lucide-react';
+import { PenTool, Target, TrendingUp } from 'lucide-react';
 import Workshop from './components/Workshop';
 import Simulator from './components/Simulator';
 import WorkspaceSidebar from './components/WorkspaceSidebar';
@@ -78,7 +78,7 @@ function App() {
   // Global Workflow State
   const [workflowStep, setWorkflowStep] = useState<'EDITING' | 'VALIDATED' | 'SIMULATING' | 'SIMULATED' | 'EVALUATING' | 'EVALUATED'>('EDITING');
   const [globalMetrics, setGlobalMetrics] = useState<any>(null);
-  const [isDirty, setIsDirty] = useState(false);
+  const [, setIsDirty] = useState(false);
 
   useEffect(() => {
      // Skip setting dirty on initial load if we just loaded a strategy
@@ -104,7 +104,7 @@ function App() {
 
   const fetchStrategies = async () => {
      try {
-        const res = await fetch('http://localhost:8000/api/strategies');
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/strategies`);
         if (res.ok) {
            const data = await res.json();
            setSavedStrategies(data);
@@ -117,8 +117,8 @@ function App() {
   const saveStrategy = async (nameOverride?: any) => {
       const nameToSave = (typeof nameOverride === 'string') ? nameOverride : strategyName;
       const url = activeStrategyId 
-         ? `http://localhost:8000/api/strategies/${activeStrategyId}`
-         : 'http://localhost:8000/api/strategies';
+         ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/strategies/${activeStrategyId}`
+         : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/strategies`;
       const method = activeStrategyId ? 'PUT' : 'POST';
 
       try {
@@ -166,7 +166,7 @@ function App() {
 
   const deleteStrategy = async (id: number) => {
      try {
-        const res = await fetch(`http://localhost:8000/api/strategies/${id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/strategies/${id}`, {
            method: 'DELETE'
         });
         if (res.ok) {
@@ -185,7 +185,7 @@ function App() {
     setValidationMessage('Validating...');
     
     try {
-      const res = await fetch('http://localhost:8000/ws/validate/', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/ws/validate/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: code })
@@ -208,7 +208,7 @@ function App() {
   const startSimulation = () => {
     if (ws) ws.close();
     
-    const socket = new WebSocket('ws://localhost:8000/ws/simulate');
+    const socket = new WebSocket(`${import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000'}/ws/simulate`);
     setWs(socket);
     setSimStatus('LOADING');
     setWorkflowStep('SIMULATING');

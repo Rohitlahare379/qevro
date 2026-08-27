@@ -1,0 +1,14 @@
+{
+  "ownerId": "tea-da80c3ek1f9s73bvejr0",
+  "type": "web_service",
+  "name": "quantive-backend",
+  "repo": "https://github.com/Rohitlahare379/Quantiv",
+  "autoDeploy": "yes",
+  "branch": "main",
+  "serviceDetails": {
+    "env": "docker",
+    "dockerContext": "./backend",
+    "dockerfilePath": "./backend/Dockerfile",
+    "plan": "free"
+  }
+}
