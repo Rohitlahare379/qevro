@@ -1,3 +1,4 @@
+import type { SharedContext, Metrics } from '../types';
 import React from 'react';
 import { FileText, Download, Shield, BarChart3, Zap } from 'lucide-react';
 
@@ -5,21 +6,22 @@ interface EvaluationReportProps {
   strategyName: string;
   asset: string;
   timeframe: string;
-  context: any;
-  globalMetrics: any;
+  context: SharedContext | null;
+  globalMetrics: Metrics | null;
 }
 
 const EvaluationReport: React.FC<EvaluationReportProps> = ({
   strategyName, asset, timeframe, context, globalMetrics
 }) => {
+  const [email, setEmail] = React.useState('');
+  const [isSending, setIsSending] = React.useState(false);
+  const [sendError, setSendError] = React.useState('');
+
   if (!context || !context.deployment_decision) return null;
   const displayDecision = context.deployment_decision === 'VALIDATION_REQUIRED'
     ? 'REQUIRE_MORE_VALIDATION'
     : context.deployment_decision;
 
-  const [email, setEmail] = React.useState('');
-  const [isSending, setIsSending] = React.useState(false);
-  const [sendError, setSendError] = React.useState('');
 
   const sendEmailReport = async () => {
     if (!email || !email.includes('@')) {
@@ -58,7 +60,7 @@ const EvaluationReport: React.FC<EvaluationReportProps> = ({
       } else {
         setSendError('Failed to send report. Please try again.');
       }
-    } catch (e) {
+    } catch {
       setSendError('Connection error. Verify backend is running.');
     } finally {
       setIsSending(false);
@@ -212,7 +214,7 @@ const EvaluationReport: React.FC<EvaluationReportProps> = ({
              03. Autonomous Agent Reasoning Trace
           </h2>
           <div className="space-y-4 font-mono">
-             {Object.values(context.agent_outputs as Record<string, any>).map((out, i) => (
+             {Object.values(context.agent_outputs || {}).map((out, i) => (
                <div key={i} className="bg-[#252526] p-6 rounded-lg border border-[#333] print:bg-gray-50 print:border-gray-200">
                   <div className="flex justify-between items-center mb-4">
                     <div className="text-[13px] font-bold text-white print:text-black uppercase">{out.agent_id}</div>

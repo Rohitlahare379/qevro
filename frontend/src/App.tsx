@@ -1,3 +1,4 @@
+import type { SavedStrategy, Metrics, Trade, WorkflowStep, SimProgress } from './types';
 import { useState, useEffect } from 'react';
 import { PenTool, Target, TrendingUp } from 'lucide-react';
 import Workshop from './components/Workshop';
@@ -39,13 +40,6 @@ const ROOMS = [
   { id: 'r3', name: 'Autonomous Evaluation (R3)', icon: TrendingUp, label: 'R3' },
 ];
 
-interface SimMetrics {
-    backtest_return: number;
-    live_return: number;
-    slippage_cost: number;
-    latency_cost: number;
-}
-
 function App() {
   const [activeStrategy, setActiveStrategy] = useState<string>('rsi');
   const [code, setCode] = useState<string>('');
@@ -59,16 +53,16 @@ function App() {
   const [activeTimeframe, setActiveTimeframe] = useState('1h');
   
   // Strategy Persistence State
-  const [savedStrategies, setSavedStrategies] = useState<any[]>([]);
+  const [savedStrategies, setSavedStrategies] = useState<SavedStrategy[]>([]);
   const [activeStrategyId, setActiveStrategyId] = useState<number | null>(null);
   const [strategyName, setStrategyName] = useState<string>('RSI strategy');
 
   const [simStatus, setSimStatus] = useState<'READY' | 'LOADING' | 'REPLAYING' | 'PAUSED' | 'STOPPED' | 'COMPLETED' | 'FAILED'>('READY');
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [, setBalance] = useState<number | null>(null);
-  const [simProgress, setSimProgress] = useState<{time: string, price: number, pnl?: number, tradeCount?: number, metrics?: SimMetrics, candles_processed?: number, total_candles?: number, percentage?: number, speed?: number, regime?: string} | null>(null);
-  const [metrics, setMetrics] = useState<any>(null);
-  const [trades, setTrades] = useState<any[]>([]);
+  const [simProgress, setSimProgress] = useState<SimProgress | null>(null);
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [trades, setTrades] = useState<Trade[]>([]);
   const [simLogs, setSimLogs] = useState<{timestamp: string, message: string, type: 'trade' | 'status' | 'signal'}[]>([]);
 
   // Validation state
@@ -76,31 +70,9 @@ function App() {
   const [validationMessage, setValidationMessage] = useState<string>('Ready for validation');
 
   // Global Workflow State
-  const [workflowStep, setWorkflowStep] = useState<'EDITING' | 'VALIDATED' | 'SIMULATING' | 'SIMULATED' | 'EVALUATING' | 'EVALUATED'>('EDITING');
-  const [globalMetrics, setGlobalMetrics] = useState<any>(null);
+  const [workflowStep, setWorkflowStep] = useState<WorkflowStep>('EDITING');
+  const [globalMetrics, setGlobalMetrics] = useState<Metrics | null>(null);
   const [, setIsDirty] = useState(false);
-
-  useEffect(() => {
-     // Skip setting dirty on initial load if we just loaded a strategy
-     if (validationMessage === 'Strategy loaded' || validationMessage === 'Template loaded') {
-        return;
-     }
-
-     if (validationStatus === 'valid' || workflowStep !== 'EDITING') {
-        setValidationStatus('idle');
-        setValidationMessage('Unsaved changes');
-        setWorkflowStep('EDITING');
-        setGlobalMetrics(null);
-        setIsDirty(true);
-     }
-  }, [code, activeAsset, params, activeTimeframe]);
-
-  useEffect(() => {
-     fetchStrategies();
-     console.log("%c--- Quantive Frontend Initialized ---", "color: #6366f1; font-weight: bold; font-size: 12px;");
-     console.log("API Base:", import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000');
-     console.log("WebSocket Base:", import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000');
-  }, []);
 
   const fetchStrategies = async () => {
      try {
@@ -114,7 +86,17 @@ function App() {
      }
   };
 
-  const saveStrategy = async (nameOverride?: any) => {
+  useEffect(() => { void fetchStrategies(); }, []);
+
+  const invalidateStrategy = () => {
+    setValidationStatus('idle');
+    setValidationMessage('Unsaved changes');
+    setWorkflowStep('EDITING');
+    setGlobalMetrics(null);
+    setIsDirty(true);
+  };
+
+  const saveStrategy = async (nameOverride?: unknown) => {
       const nameToSave = (typeof nameOverride === 'string') ? nameOverride : strategyName;
       const url = activeStrategyId 
          ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/strategies/${activeStrategyId}`
@@ -148,7 +130,7 @@ function App() {
       }
   };
 
-   const loadStrategy = (strategy: any) => {
+   const loadStrategy = (strategy: SavedStrategy) => {
       setActiveStrategyId(strategy.id);
       setStrategyName(strategy.name);
       setActiveStrategy(strategy.template_id || 'rsi');
@@ -199,7 +181,7 @@ function App() {
         setValidationStatus('error');
         setValidationMessage(data.message);
       }
-    } catch (e) {
+    } catch {
       setValidationStatus('error');
       setValidationMessage('Validation server unreachable');
     }
@@ -238,9 +220,9 @@ function App() {
       if (data.type === 'update') {
           setSimProgress({ ...data.progress, ...data });
           if (data.metrics) {
-            setGlobalMetrics((prev: any) => ({ ...(prev || {}), ...data.metrics }));
+            setGlobalMetrics((prev: Metrics | null) => ({ ...(prev || {}), ...data.metrics }));
           }
-          setMetrics((prev: any) => ({
+          setMetrics((prev: Metrics | null) => ({
             ...(prev || {}),
             ...(data.metrics || {}),
             win_rate: data.win_rate ?? prev?.win_rate,
@@ -265,7 +247,7 @@ function App() {
       if (data.type === 'complete') {
           setSimStatus('COMPLETED');
           setMetrics(data.metrics);
-          setGlobalMetrics((prev: any) => ({ ...(prev || {}), ...data.metrics }));
+          setGlobalMetrics((prev: Metrics | null) => ({ ...(prev || {}), ...data.metrics }));
           if (data.trades) setTrades(data.trades);
           setWorkflowStep('SIMULATED');
       }
@@ -336,13 +318,13 @@ function App() {
           strategyName={strategyName}
           setStrategyName={setStrategyName}
           code={code}
-          setCode={(nextCode) => setCode(nextCode || '')}
+          setCode={(nextCode) => { setCode(nextCode || ''); invalidateStrategy(); }}
           activeAsset={activeAsset}
-          setActiveAsset={setActiveAsset}
+          setActiveAsset={(value) => { setActiveAsset(value); invalidateStrategy(); }}
           activeTimeframe={activeTimeframe}
-          setActiveTimeframe={setActiveTimeframe}
+          setActiveTimeframe={(value) => { setActiveTimeframe(value); invalidateStrategy(); }}
           params={params}
-          setParams={setParams}
+          setParams={(value) => { setParams(value); invalidateStrategy(); }}
           validationStatus={validationStatus}
           validationMessage={validationMessage}
           validateStrategy={validateStrategy}

@@ -1,3 +1,4 @@
+import type { StrategyParams } from '../types';
 import React from 'react';
 import Editor from '@monaco-editor/react';
 import { Play, Save, Target, FolderOpen } from 'lucide-react';
@@ -11,8 +12,8 @@ interface WorkshopProps {
   setActiveAsset: (asset: string) => void;
   activeTimeframe: string;
   setActiveTimeframe: (tf: string) => void;
-  params: any;
-  setParams: (params: any) => void;
+  params: StrategyParams;
+  setParams: (params: StrategyParams) => void;
   validationStatus: string;
   validationMessage: string;
   validateStrategy: () => void;

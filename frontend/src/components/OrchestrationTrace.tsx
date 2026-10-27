@@ -1,15 +1,6 @@
+import type { TraceEvent } from '../types';
 import React, { useState } from 'react';
 import { Activity, ChevronDown, ChevronRight, Info, Terminal, Timer } from 'lucide-react';
-
-interface TraceEvent {
-  agent_id: string;
-  event_type: string;
-  stage: string;
-  timestamp: string;
-  duration_ms?: number;
-  data: any;
-  message: string;
-}
 
 interface OrchestrationTraceProps {
   traces: TraceEvent[];

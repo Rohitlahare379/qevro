@@ -1,3 +1,4 @@
+import type { SharedContext, RegimeAnalysis, RobustnessResults, StrategyParams, Metrics, WorkflowStep } from '../types';
 import React, { useMemo, useState } from 'react';
 import {
   Activity,
@@ -31,43 +32,14 @@ type WorkflowLifecycle =
   | 'COMPLETED'
   | 'FAILED';
 
-interface AgentOutput {
-  agent_id: string;
-  timestamp: string;
-  status: string;
-  data: Record<string, unknown>;
-  logs: string[];
-}
-
-interface TraceEvent {
-  agent_id: string;
-  event_type: string;
-  stage: string;
-  timestamp: string;
-  duration_ms?: number;
-  data: Record<string, unknown>;
-  message: string;
-}
-
-interface SharedContext {
-  regime_analysis?: Record<string, any>;
-  robustness_results?: Record<string, any>;
-  deployment_decision?: string;
-  decision_reasoning?: string;
-  replay_metrics?: Record<string, any>;
-  agent_outputs?: Record<string, AgentOutput>;
-  traces?: TraceEvent[];
-  current_phase?: string;
-}
-
 interface OrchestratorProps {
   strategyName: string;
   code: string;
   asset: string;
   timeframe: string;
-  params: any;
-  globalMetrics: any;
-  setWorkflowStep: (step: any) => void;
+  params: StrategyParams;
+  globalMetrics: Metrics | null;
+  setWorkflowStep: (step: WorkflowStep) => void;
 }
 
 const AGENT_SEQUENCE = [
@@ -464,8 +436,8 @@ const AgentPanel: React.FC<{
 const DeploymentDecisionPanel: React.FC<{
   decision?: string;
   reasoning?: string;
-  regime?: Record<string, any>;
-  robustness?: Record<string, any>;
+  regime?: RegimeAnalysis;
+  robustness?: RobustnessResults;
   evidence: ReturnType<typeof buildEvidence>;
   riskRegister: Array<{ label: string; value: string; tone: 'neutral' | 'warning' | 'danger' | 'success' }>;
   lifecycle: WorkflowLifecycle;
@@ -635,7 +607,7 @@ const StatusPill: React.FC<{ state: WorkflowLifecycle }> = ({ state }) => {
   return <span className={`px-2.5 py-1 rounded border text-[10px] font-mono ${cls}`}>{state}</span>;
 };
 
-const buildEvidence = (metrics: any, context: SharedContext | null) => {
+const buildEvidence = (metrics: Metrics | null, context: SharedContext | null) => {
   const liveReturn = numberOrNull(metrics?.live_return ?? metrics?.total_return);
   const idealReturn = numberOrNull(metrics?.backtest_return);
   const slippage = numberOrNull(metrics?.slippage_cost);
@@ -670,12 +642,12 @@ const buildEvidence = (metrics: any, context: SharedContext | null) => {
   };
 };
 
-const buildRationale = (decision?: string, regime?: Record<string, any>, robustness?: Record<string, any>) => {
+const buildRationale = (decision?: string, regime?: RegimeAnalysis, robustness?: RobustnessResults) => {
   if (!decision) return 'Awaiting deployment synthesis.';
   return `${decision} based on ${formatScore(regime?.suitability_score)} regime suitability and ${formatScore(robustness?.robustness_score)} robustness.`;
 };
 
-const buildRisks = (regime?: Record<string, any>, robustness?: Record<string, any>, evidence?: ReturnType<typeof buildEvidence>) => {
+const buildRisks = (regime?: RegimeAnalysis, robustness?: RobustnessResults, evidence?: ReturnType<typeof buildEvidence>) => {
   const risks = [
     regime?.volatility_score !== undefined ? `volatility ${formatPercent(regime.volatility_score)}` : null,
     robustness?.friction_sensitivity ? `friction sensitivity ${robustness.friction_sensitivity}` : null,

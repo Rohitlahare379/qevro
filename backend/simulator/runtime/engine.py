@@ -61,10 +61,7 @@ class StrategyRunner:
             elif 'history' in sig.parameters:
                 kwargs['history'] = hist_df
                 
-            # Many user strategies assume candle is a dictionary
-            candle_data = candle.model_dump()
-            
-            result = self.strategy.on_candle(candle_data, **kwargs)
+            result = self.strategy.on_candle(candle, **kwargs)
             
             # 2. Validate signal type
             if isinstance(result, Signal):

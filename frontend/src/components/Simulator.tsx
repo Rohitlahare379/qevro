@@ -1,9 +1,10 @@
+import type { StrategyTemplates, SimProgress, Metrics, Trade, SimLog } from '../types';
 import React from 'react';
 import { Square } from 'lucide-react';
 
 interface SimulatorProps {
   activeStrategy: string;
-  STRATEGY_TEMPLATES: any;
+  STRATEGY_TEMPLATES: StrategyTemplates;
   activeAsset: string;
   activeRegime: string;
   setActiveRegime: (r: string) => void;
@@ -16,10 +17,10 @@ interface SimulatorProps {
   validationStatus: string;
   startSimulation: () => void;
   stopSimulation: () => void;
-  simProgress: any;
-  metrics: any;
-  trades: any[];
-  simLogs: any[];
+  simProgress: SimProgress | null;
+  metrics: Metrics | null;
+  trades: Trade[];
+  simLogs: SimLog[];
 }
 
 const Simulator: React.FC<SimulatorProps> = ({

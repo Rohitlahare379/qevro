@@ -1,12 +1,13 @@
+import type { SavedStrategy, StrategyTemplates } from '../types';
 import React from 'react';
 import { Trash2 } from 'lucide-react';
 
 interface WorkspaceSidebarProps {
-  savedStrategies: any[];
+  savedStrategies: SavedStrategy[];
   activeStrategyId: number | null;
-  loadStrategy: (s: any) => void;
+  loadStrategy: (s: SavedStrategy) => void;
   deleteStrategy: (id: number) => void;
-  STRATEGY_TEMPLATES: any;
+  STRATEGY_TEMPLATES: StrategyTemplates;
   handleTemplateLoad: (id: string) => void;
 }
 
@@ -56,7 +57,7 @@ const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
         <div>
           <h3 className="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-3 px-2">Templates</h3>
           <div className="space-y-3">
-             {Object.entries(STRATEGY_TEMPLATES).map(([id, t]: [string, any]) => (
+             {Object.entries(STRATEGY_TEMPLATES).map(([id, t]) => (
                <button 
                  key={id} 
                  onClick={() => handleTemplateLoad(id)}
