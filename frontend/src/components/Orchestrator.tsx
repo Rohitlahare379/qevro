@@ -1,4 +1,4 @@
-import type { SharedContext, RegimeAnalysis, RobustnessResults, StrategyParams, Metrics, WorkflowStep } from '../types';
+import type { AgentOutput, SharedContext, RegimeAnalysis, RobustnessResults, StrategyParams, Metrics, TraceEvent, WorkflowStep } from '../types';
 import React, { useMemo, useState } from 'react';
 import {
   Activity,

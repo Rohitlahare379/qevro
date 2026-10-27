@@ -203,7 +203,7 @@ const EvaluationReport: React.FC<EvaluationReportProps> = ({
             <MetricCard label="Total Return" value={`${globalMetrics?.total_return?.toFixed(2)}%`} sub="Absolute ROI" />
             <MetricCard label="Max Drawdown" value={`${globalMetrics?.max_drawdown?.toFixed(2)}%`} sub="Peak-to-Trough" color="text-red-400" />
             <MetricCard label="Win Rate" value={`${globalMetrics?.win_rate?.toFixed(1)}%`} sub={`${globalMetrics?.trade_count} Trades`} />
-            <MetricCard label="Sharpe Ratio" value={globalMetrics?.sharpe_ratio?.toFixed(2)} sub="Risk Adjusted" color="text-indigo-400" />
+            <MetricCard label="Sharpe Ratio" value={globalMetrics?.sharpe_ratio?.toFixed(2) ?? 'N/A'} sub="Risk Adjusted" color="text-indigo-400" />
           </div>
         </section>
 
